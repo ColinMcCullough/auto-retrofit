@@ -1,39 +1,25 @@
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var sheetsCount = ss.getNumSheets();
 var sheets = ss.getSheets();
-/*
-function onOpen() { 
-  // Try New Google Sheets method
-  try{
-    var ui = SpreadsheetApp.getUi();
-    ui.createMenu('Retrofitting Tools')
-    .addItem('Show Sheets', 'showSheets')
-    .addItem('Hide External Sheets by Keyword', 'hideSheets')
-    .addItem('Delete Sheets All Sheets From Sheet #', 'deleteAllSheetsFrom')
-    .addItem('Delete External Sheets by Keyword', 'deleteSheetsByKeyword')
-    .addItem('Copy All Visible Sheets', 'copyAllVisibleSheets') 
-    .addItem('Copy Sheets By Keyword', 'copySheets') 
-    .addToUi(); 
-  } 
-  
-  // Log the error
-  catch (e){Logger.log(e)}
-  
-  // Use old Google Spreadsheet method
-  finally{
-    var items = [
-      {name: 'Hide Sheets', functionName: 'hideSheets'},
-      {name: 'Show Sheets', functionName: 'showSheets'},
-      {name: 'Delete Sheets All Sheets From Sheet #', functionName: 'deleteAllSheetsFrom'},
-      {name: 'Delete Sheets', functionName: 'deleteSheets'},
-      {name: 'Copy Sheets', functionName: 'copySheets'},
-      
-    ];
-      ss.addMenu('Retrofitting Tools', items);
-  }
+var SIDEBAR_TITLE = "Auto Retro Fit Tool";
+
+function onOpen() {
+ SpreadsheetApp.getUi()
+      .createAddonMenu()
+      .addItem('Retrofit Tool', 'showSidebar')
+      .addToUi();
 }
-ss.deleteSheet(sheet);
-*/
+
+/**
+ * Opens a sidebar. The sidebar structure is described in the Sidebar.html
+ * project file.
+ */
+function showSidebar() {
+  var ui = HtmlService.createTemplateFromFile('Sidebar')
+      .evaluate()
+      .setTitle(SIDEBAR_TITLE);
+  SpreadsheetApp.getUi().showSidebar(ui);
+}
 
 //test function to delete test sheets other than tab named home
 function deleteAllExternalSheets() {
@@ -66,6 +52,7 @@ function deleteSheetsByKeyword() {
         destination.deleteSheet(extsheet);
       }
     }
+    successAlert('deleted')
   } else { 
     noMatchAlert();
   }
@@ -104,6 +91,7 @@ function hideSheets() {
         destinationArchive(destination,extsheet,extsheetName);
       }
     }
+    successAlert('hidden')
   } else { 
     noMatchAlert();
   }
@@ -125,18 +113,22 @@ function renameAndArchive(destination,extsheet,sheetName) {
   This function will show all sheets with names matching the text entered in the prompt
 */
 function showSheets() {
-  var showSheetsContaining = Browser.inputBox("Show sheets with names containing:"); 
-  if (sheetMatch(showSheetsContaining)){
-    for (var i = 0; i < sheetsCount; i++){
-      var sheet = sheets[i]; 
-      var sheetName = sheet.getName();
-      Logger.log(sheetName); 
-      if (sheetName.indexOf(showSheetsContaining.toString()) !== -1){
-        Logger.log("SHOW!");
-        sheet.showSheet();
+  var hideSheetsContaining = Browser.inputBox("Show sheets with names containing:");
+  var destinationId = Browser.inputBox("Enter the destination spreadsheet ID:"); // update
+  var destination = SpreadsheetApp.openById(destinationId);
+  var extsheetsCount = destination.getNumSheets();
+  var extsheets = destination.getSheets();
+  if (extSheetMatch(hideSheetsContaining,extsheetsCount,extsheets)){
+    for (var i = 0; i < extsheetsCount; i++){
+      var extsheet = extsheets[i]; 
+      var extsheetName = extsheet.getName();
+      if (extsheetName.indexOf(hideSheetsContaining.toString()) !== -1 && extsheet.isSheetHidden()){
+        //renameAndArchive(destination,extsheet,extsheetName); 
+        extsheet.showSheet();
       }
-    } 
-  } else {
+    }
+    successAlert('unhidden')
+  } else { 
     noMatchAlert();
   }
 }
