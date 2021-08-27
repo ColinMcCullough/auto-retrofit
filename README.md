@@ -1,2 +1,2 @@
 # auto-retrofit
-Spreadsheet Auto Retrofit Functions
+Google Sheets Add On that exports data programaticlly from one sheet to another.
